@@ -7,6 +7,7 @@ from transformers import (
     AutoTokenizer,
     T5ForConditionalGeneration,
     AutoConfig,
+    T5Tokenizer
 )
 
 from .copied_utils import (
@@ -45,8 +46,8 @@ def get_config(args):
 
 
 def get_tokenizer(args):
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.model.name,
+    tokenizer = T5Tokenizer.from_pretrained(
+        args.model.tokenizer_name,
         use_fast=True
     )
     tokenizer.model_max_length = int(1e9)
@@ -57,9 +58,9 @@ def get_tokenizer(args):
 def load_dataset_splits(args):
     if args.mode == 'pt':
         dataset = datasets.load_dataset(
-            'c4',
-            'en',
-            streaming=True,
+            'mc4',
+            'th',
+            # streaming=True,
         )
 
         dataset = dataset.remove_columns(
@@ -67,12 +68,12 @@ def load_dataset_splits(args):
         )
 
         dataset_splits = {
-            'train': dataset['train'],
-            'test': dataset['validation'],
+            'train': dataset['train'].to_iterable_dataset(num_shards=1024),
+            'test': dataset['validation'].to_iterable_dataset(num_shards=1024),
         }
 
         assert (
-            dataset['train'].n_shards == 1024
+            dataset_splits['train'].n_shards == 1024
         ), "We want to have many shards for efficient processing with num_workes in PyTorch dataloader"
     elif args.mode == 'ft':
         dataset_splits = datasets.load_dataset(
@@ -135,7 +136,8 @@ def get_data_collator(tokenizer, config, args):
             mean_noise_span_length=args.data.mean_noise_span_length,
             input_length=args.data.input_length,
             target_length=args.data.target_length,
-            pad_token_id=config.pad_token_id,
+            # pad_token_id=config.pad_token_id,
+            pad_token_id=tokenizer.pad_token_id,
         )
     elif args.mode == 'ft':
         data_collator = DataCollatorForNI(

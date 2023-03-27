@@ -11,10 +11,13 @@ seed: 2137
 
 model:
   name: 'google/t5-v1_1-base'
+  # tokenizer_name: 'google/mt5-base'
+  # tokenizer_name: 'airesearch/wangchanberta-base-att-spm-uncased'
+  tokenizer_name: '/project/lt900001-ai23ta/new/nanoT5/sentencepiece.bpe.model'
   checkpoint_path: ''
   dropout: 0.0
   random_init: true
-  compile: false # Pytorch 2.0
+  compile: true # Pytorch 2.0
 
 data:
   input_length: 512
@@ -25,14 +28,14 @@ data:
 optim:
   name: adamwscale
   base_lr: 2e-2
-  batch_size: 144
-  total_steps: 65536
+  batch_size: 144 # 144
+  total_steps: 100000 # 65536
   epochs: -1 # If it's > 0 it overwrites total_steps
   warmup_steps: 10000
   lr_scheduler: cosine
   weight_decay: 0.0
   grad_clip: 1.0
-  grad_acc: 2
+  grad_acc: 4 # 2
   final_cosine: 1e-5
 
 eval:
@@ -40,7 +43,7 @@ eval:
   steps: 500
 
 checkpoint:
-  every_steps: 30000
+  every_steps: 10000
 
 logging:
   neptune: false
